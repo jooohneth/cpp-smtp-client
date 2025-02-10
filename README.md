@@ -77,3 +77,12 @@ Note: this assumes you're using g++ to compile your C++ code. See this [resource
 ```shell
     ./run/smtpClient
 ```
+
+6. Check if it works:
+
+If you did everything right, you should see two things:
+
+- a CLI confirmation that looks like this:
+  ![cli-success](./public/cli-success.png)
+- the email itself
+  ![gmail-success](./public/gmail-success.png)
