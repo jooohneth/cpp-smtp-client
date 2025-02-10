@@ -1,8 +1,12 @@
+// g++ -std=c++17 -Wall -g -o ./run/smtpClient smtpClient.cpp lib/base64.cpp -I/opt/homebrew/opt/openssl@3/include -L/opt/homebrew/opt/openssl@3/lib -lssl -lcrypto
+
+// including POSIX socket API
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
+
 #define SOCKET int               // On UNIX/Linux, sockets are just integers
 #define INVALID_SOCKET -1        // Value indicating socket creation failed
 #define SOCKET_ERROR -1          // Value indicating a socket operation failed
@@ -11,17 +15,29 @@
 #define INIT_SOCKETS()           // Empty macro (needed only for Windows)
 #define CLEANUP_SOCKETS()        // Empty macro (needed only for Windows)
 
+// including OpenSSL library
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+
+// including standard libraries
 #include <iostream>
 #include <string>
-#include "base64.h"
 #include <fstream>
 #include <sstream>
 
-#pragma comment(lib, "libssl.lib")
-#pragma comment(lib, "libcrypto.lib")
+#include "lib/base64.h"
 
+#define EMAIL_SENDER "jooohnng@gmail.com"
+#define EMAIL_PASSWORD "zidu dags yrrm kpkv"
+#define EMAIL_RECEIVER "jooohn.eth@gmail.com"
+#define EMAIL_CC_RECIPIENTS {"snehamrzzn@gmail.com", "dn269234@gmail.com"}
+#define EMAIL_BCC_RECIPIENTS {"john@mantle.xyz"}
+#define FILEPATH "./attachment/boyss.jpg"
+
+#define SUBJECT "THE GREATEST EMAIL OF ALL TIME"
+#define BODY "JUST A BOY \nhttps://justaboy.us "
+
+// function to send SMTP command
 void sendSMTPCommand(SSL *ssl, const std::string &command, const std::string &expectedResponse)
 {
     SSL_write(ssl, command.c_str(), command.size());
@@ -34,6 +50,7 @@ void sendSMTPCommand(SSL *ssl, const std::string &command, const std::string &ex
     }
 }
 
+// function to read file
 std::string readFile(const std::string &filepath)
 {
     std::ifstream file(filepath, std::ios::binary);
@@ -45,6 +62,44 @@ std::string readFile(const std::string &filepath)
                        std::istreambuf_iterator<char>());
 }
 
+// Add this function to determine MIME type
+std::string getMimeType(const std::string &filename)
+{
+    // Get file extension
+    size_t dot_pos = filename.find_last_of(".");
+    if (dot_pos == std::string::npos)
+        return "application/octet-stream";
+
+    std::string ext = filename.substr(dot_pos);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    // Common MIME types
+    if (ext == ".txt")
+        return "text/plain";
+    if (ext == ".pdf")
+        return "application/pdf";
+    if (ext == ".jpg" || ext == ".jpeg")
+        return "image/jpeg";
+    if (ext == ".png")
+        return "image/png";
+    if (ext == ".gif")
+        return "image/gif";
+    if (ext == ".doc" || ext == ".docx")
+        return "application/msword";
+    if (ext == ".xls" || ext == ".xlsx")
+        return "application/vnd.ms-excel";
+    if (ext == ".zip")
+        return "application/zip";
+    if (ext == ".mp3")
+        return "audio/mpeg";
+    if (ext == ".mp4")
+        return "video/mp4";
+
+    // Default to binary stream if unknown
+    return "application/octet-stream";
+}
+
+// main function
 int main()
 {
 
@@ -53,16 +108,16 @@ int main()
     const int smtpPort = 465; // SMTP over SSL
 
     // Sender credentials
-    const std::string emailSender = "jooohnng@gmail.com";
-    const std::string emailPassword = "zidu dags yrrm kpkv";
+    const std::string emailSender = EMAIL_SENDER;
+    const std::string emailPassword = EMAIL_PASSWORD;
 
     // Recipients
-    const std::string emailReceiver = "jooohn.eth@gmail.com";
-    const std::vector<std::string> ccRecipients = {"snehamrzzn@gmail.com"};
-    const std::vector<std::string> bccRecipients = {"john@mantle.xyz"};
+    const std::string emailReceiver = EMAIL_RECEIVER;
+    const std::vector<std::string> ccRecipients = EMAIL_CC_RECIPIENTS;
+    const std::vector<std::string> bccRecipients = EMAIL_BCC_RECIPIENTS;
 
-    const std::string subject = "Test Email with Attachment";
-    const std::string body = "This is a test email sent using Winsock and OpenSSL.\n\nPlease find the attached file.";
+    const std::string subject = SUBJECT;
+    const std::string body = BODY;
 
     try
     {
@@ -121,6 +176,7 @@ int main()
         std::string base64Email = base64_encode(reinterpret_cast<const unsigned char *>(emailSender.c_str()), emailSender.size());
         std::string base64Password = base64_encode(reinterpret_cast<const unsigned char *>(emailPassword.c_str()), emailPassword.size());
 
+        // Send encoded credentials
         sendSMTPCommand(ssl, base64Email + "\r\n", "334");
         sendSMTPCommand(ssl, base64Password + "\r\n", "235");
 
@@ -142,7 +198,7 @@ int main()
             sendSMTPCommand(ssl, "RCPT TO:<" + bcc + ">\r\n", "250");
         }
 
-        // Construct CC header field
+        // Construct CC header field, note: not including BCC recipients
         std::string ccHeader;
         if (!ccRecipients.empty())
         {
@@ -159,19 +215,19 @@ int main()
         }
 
         // File to attach (relative path)
-        std::string filepath = "./test.txt"; // Replace with your file path
-        std::string filename = filepath;     // For relative path, use the filepath as filename
+        std::string filepath = FILEPATH; // Replace with your file path
+        std::string filename = filepath; // For relative path, use the filepath as filename
 
         // Read and encode the file
         std::string fileContent = readFile(filepath);
         std::string encodedFile = base64_encode(reinterpret_cast<const unsigned char *>(fileContent.c_str()),
                                                 fileContent.length());
 
-        // Construct email with attachment
+        // Modify the email content construction part
         std::string emailContent = "From: " + emailSender + "\r\n"
                                                             "To: " +
                                    emailReceiver + "\r\n" +
-                                   ccHeader + // CC recipients visible in header
+                                   ccHeader +
                                    "Subject: " + subject + "\r\n"
                                                            "MIME-Version: 1.0\r\n"
                                                            "Content-Type: multipart/mixed; boundary=\"boundary\"\r\n\r\n"
@@ -179,10 +235,10 @@ int main()
                                                            "Content-Type: text/plain; charset=utf-8\r\n\r\n" +
                                    body + "\r\n\r\n"
                                           "--boundary\r\n"
-                                          "Content-Type: application/octet-stream; name=\"" +
-                                   filename + "\"\r\n"
-                                              "Content-Transfer-Encoding: base64\r\n"
-                                              "Content-Disposition: attachment; filename=\"" +
+                                          "Content-Type: " +
+                                   getMimeType(filename) + "; name=\"" + filename + "\"\r\n"
+                                                                                    "Content-Transfer-Encoding: base64\r\n"
+                                                                                    "Content-Disposition: attachment; filename=\"" +
                                    filename + "\"\r\n\r\n" +
                                    encodedFile + "\r\n\r\n"
                                                  "--boundary--\r\n.\r\n";
