@@ -1,4 +1,26 @@
-// g++ -std=c++17 -Wall -g -o ./run/smtpClient smtpClient.cpp lib/base64.cpp -I/opt/homebrew/opt/openssl@3/include -L/opt/homebrew/opt/openssl@3/lib -lssl -lcrypto
+// ----------------------------------------------------------------------------------------------
+
+// -----------------------SENDER----------------------------
+
+#define EMAIL_SENDER "jooohnng@gmail.com"    // ----> YOUR EMAIL
+#define EMAIL_PASSWORD "**** **** **** ****" // ----> YOUR APP PASSWORD
+
+// -----------------------RECIPIENTS------------------------
+
+#define EMAIL_RECEIVER "jooohn.eth@gmail.com"                                                      // ----> RECIPIENT EMAIL
+#define EMAIL_CC_RECIPIENTS {"snehamrzzn@gmail.com", "dn269234@gmail.com", "alikh.og00@gmail.com"} // ----> CC RECIPIENTS
+#define EMAIL_BCC_RECIPIENTS {"john@mantle.xyz"}                                                   // ----> BCC RECIPIENTS
+
+// -----------------------CONTENT----------------------------
+
+#define SUBJECT "THE GREATEST EMAIL OF ALL TIME" // ----> SUBJECT
+#define BODY "JUST A BOY \nhttps://justaboy.us"  // ----> BODY
+
+// -----------------------FILE PATH--------------------------
+
+#define FILEPATH "./attachment/boyss.jpg" // ----> FILE PATH
+
+// ----------------------------------------------------------------------------------------------
 
 // including POSIX socket API
 #include <sys/socket.h>
@@ -26,16 +48,6 @@
 #include <sstream>
 
 #include "lib/base64.h"
-
-#define EMAIL_SENDER "jooohnng@gmail.com"
-#define EMAIL_PASSWORD "zidu dags yrrm kpkv"
-#define EMAIL_RECEIVER "jooohn.eth@gmail.com"
-#define EMAIL_CC_RECIPIENTS {"snehamrzzn@gmail.com", "dn269234@gmail.com"}
-#define EMAIL_BCC_RECIPIENTS {"john@mantle.xyz"}
-#define FILEPATH "./attachment/boyss.jpg"
-
-#define SUBJECT "THE GREATEST EMAIL OF ALL TIME"
-#define BODY "JUST A BOY \nhttps://justaboy.us "
 
 // function to send SMTP command
 void sendSMTPCommand(SSL *ssl, const std::string &command, const std::string &expectedResponse)
